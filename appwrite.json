@@ -1,0 +1,670 @@
+{
+    "projectId": "685e6b8e001cc5b5066e",
+    "projectName": "New project",
+    "settings": {
+        "services": {
+            "account": true,
+            "avatars": true,
+            "databases": true,
+            "locale": true,
+            "health": true,
+            "storage": true,
+            "teams": true,
+            "users": true,
+            "sites": true,
+            "functions": true,
+            "graphql": true,
+            "messaging": true
+        },
+        "auth": {
+            "methods": {
+                "jwt": true,
+                "phone": true,
+                "invites": true,
+                "anonymous": true,
+                "email-otp": true,
+                "magic-url": true,
+                "email-password": true
+            },
+            "security": {
+                "duration": 31536000,
+                "limit": 0,
+                "sessionsLimit": 10,
+                "passwordHistory": 0,
+                "passwordDictionary": false,
+                "personalDataCheck": false,
+                "sessionAlerts": false,
+                "mockNumbers": []
+            }
+        }
+    },
+    "databases": [
+        {
+            "$id": "55316047-503c-403b-b174-94a88fe0e035",
+            "name": "TV",
+            "enabled": true
+        },
+        {
+            "$id": "f481d38a-d622-4f30-912e-75eb3f34041e",
+            "name": "will",
+            "enabled": true
+        },
+        {
+            "$id": "ccb0dbe4-1c3a-48a8-a480-9e3047173b41",
+            "name": "road",
+            "enabled": true
+        },
+        {
+            "$id": "02d30f9e-fb2c-432d-87ec-550a00c03710",
+            "name": "nor",
+            "enabled": true
+        },
+        {
+            "$id": "27fcd90e-e93b-45c7-b08b-2a348e53ec11",
+            "name": "young",
+            "enabled": true
+        }
+    ],
+    "collections": [
+        {
+            "$id": "61ebb5bd-0ab2-4e77-93c8-d5f26127a1e1",
+            "databaseId": "55316047-503c-403b-b174-94a88fe0e035",
+            "name": "positive",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "big",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1349,
+                    "default": null
+                },
+                {
+                    "key": "fill",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1070,
+                    "default": null
+                },
+                {
+                    "key": "prevent",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 98,
+                    "default": null
+                },
+                {
+                    "key": "red",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1189,
+                    "default": null
+                },
+                {
+                    "key": "offer",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 996,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "2284be06-6aea-497e-85ce-8ce94b941264",
+            "databaseId": "55316047-503c-403b-b174-94a88fe0e035",
+            "name": "out",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "care",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 787,
+                    "default": null
+                },
+                {
+                    "key": "goal",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 888,
+                    "default": null
+                },
+                {
+                    "key": "where",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1473,
+                    "default": null
+                },
+                {
+                    "key": "clearly",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1008,
+                    "default": null
+                },
+                {
+                    "key": "station",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 87,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "8bfea926-ba84-4ee8-ac54-da22de5dd617",
+            "databaseId": "f481d38a-d622-4f30-912e-75eb3f34041e",
+            "name": "before",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "would",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 697,
+                    "default": null
+                },
+                {
+                    "key": "range",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1088,
+                    "default": null
+                },
+                {
+                    "key": "tell",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 896,
+                    "default": null
+                },
+                {
+                    "key": "of",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1330,
+                    "default": null
+                },
+                {
+                    "key": "technology",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1253,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "a66e3b35-96b0-4475-9255-b16cb11a3fea",
+            "databaseId": "f481d38a-d622-4f30-912e-75eb3f34041e",
+            "name": "recent",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "interest",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1151,
+                    "default": null
+                },
+                {
+                    "key": "wear",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 299,
+                    "default": null
+                },
+                {
+                    "key": "personal",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 18,
+                    "default": null
+                },
+                {
+                    "key": "benefit",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1066,
+                    "default": null
+                },
+                {
+                    "key": "identify",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1190,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "8d22bb86-201f-4d7d-9775-90f16a66c976",
+            "databaseId": "ccb0dbe4-1c3a-48a8-a480-9e3047173b41",
+            "name": "rock",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "task",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 642,
+                    "default": null
+                },
+                {
+                    "key": "light",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1483,
+                    "default": null
+                },
+                {
+                    "key": "present",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 827,
+                    "default": null
+                },
+                {
+                    "key": "maintain",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1170,
+                    "default": null
+                },
+                {
+                    "key": "across",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 985,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "71c49e96-02fb-4b90-a4b0-ee44a91f8454",
+            "databaseId": "ccb0dbe4-1c3a-48a8-a480-9e3047173b41",
+            "name": "true",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "world",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1080,
+                    "default": null
+                },
+                {
+                    "key": "learn",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 327,
+                    "default": null
+                },
+                {
+                    "key": "police",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 284,
+                    "default": null
+                },
+                {
+                    "key": "they",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 391,
+                    "default": null
+                },
+                {
+                    "key": "sense",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 712,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "25563821-043b-4a23-a395-7dc3f4b4dc31",
+            "databaseId": "ccb0dbe4-1c3a-48a8-a480-9e3047173b41",
+            "name": "method",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "rate",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1005,
+                    "default": null
+                },
+                {
+                    "key": "too",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 834,
+                    "default": null
+                },
+                {
+                    "key": "bit",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1235,
+                    "default": null
+                },
+                {
+                    "key": "need",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1407,
+                    "default": null
+                },
+                {
+                    "key": "matter",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 476,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "6755948c-acd0-41dc-80eb-a8867c715dd6",
+            "databaseId": "02d30f9e-fb2c-432d-87ec-550a00c03710",
+            "name": "look",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "arrive",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 544,
+                    "default": null
+                },
+                {
+                    "key": "generation",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1289,
+                    "default": null
+                },
+                {
+                    "key": "certain",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 830,
+                    "default": null
+                },
+                {
+                    "key": "democratic",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 122,
+                    "default": null
+                },
+                {
+                    "key": "defense",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 340,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "20cdd1ba-a437-46a1-822c-f9a9879b9e8d",
+            "databaseId": "02d30f9e-fb2c-432d-87ec-550a00c03710",
+            "name": "office",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "over",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1322,
+                    "default": null
+                },
+                {
+                    "key": "health",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 43,
+                    "default": null
+                },
+                {
+                    "key": "drug",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1497,
+                    "default": null
+                },
+                {
+                    "key": "since",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1264,
+                    "default": null
+                },
+                {
+                    "key": "thought",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 231,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "bc5f87bc-5661-4a84-8b6a-d9030f6ecc04",
+            "databaseId": "27fcd90e-e93b-45c7-b08b-2a348e53ec11",
+            "name": "talk",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "difficult",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1362,
+                    "default": null
+                },
+                {
+                    "key": "military",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 82,
+                    "default": null
+                },
+                {
+                    "key": "be",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1094,
+                    "default": null
+                },
+                {
+                    "key": "contain",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 932,
+                    "default": null
+                },
+                {
+                    "key": "order",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 388,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "2dbbf3fb-4567-482f-a0cf-f51762d82c58",
+            "databaseId": "27fcd90e-e93b-45c7-b08b-2a348e53ec11",
+            "name": "protect",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "service",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 701,
+                    "default": null
+                },
+                {
+                    "key": "take",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 957,
+                    "default": null
+                },
+                {
+                    "key": "kind",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 924,
+                    "default": null
+                },
+                {
+                    "key": "thank",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 1027,
+                    "default": null
+                },
+                {
+                    "key": "relationship",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1084,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        },
+        {
+            "$id": "43177df9-8eff-422a-9011-14a6946640c3",
+            "databaseId": "27fcd90e-e93b-45c7-b08b-2a348e53ec11",
+            "name": "night",
+            "enabled": true,
+            "documentSecurity": false,
+            "attributes": [
+                {
+                    "key": "sell",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1000,
+                    "default": null
+                },
+                {
+                    "key": "American",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 972,
+                    "default": null
+                },
+                {
+                    "key": "sister",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 1160,
+                    "default": null
+                },
+                {
+                    "key": "list",
+                    "type": "string",
+                    "required": false,
+                    "array": false,
+                    "size": 373,
+                    "default": null
+                },
+                {
+                    "key": "never",
+                    "type": "string",
+                    "required": true,
+                    "array": false,
+                    "size": 79,
+                    "default": null
+                }
+            ],
+            "indexes": []
+        }
+    ]
+}
