@@ -5,6 +5,8 @@ python migration_validator.py --pull --output prod_snapshot.json
 # Compare two pulled project states and print migration diff
 python migration_validator.py --compare --source prod_snapshot.json --destination staging_snapshot.json
 
+# With resume and checkpointing logic to resume from in between
+python migration_validator.py --pull --output des_snapshot.json --resume
 """
 import os
 import time
@@ -21,9 +23,9 @@ import pickle
 
 # Load .env
 load_dotenv()
-ENDPOINT = os.getenv("APPWRITE_ENDPOINT")
-PROJECT_ID = os.getenv("APPWRITE_PROJECT_ID")
-API_KEY = os.getenv("APPWRITE_API_KEY")
+ENDPOINT = "https://fra.cloud.appwrite.io/v1"
+PROJECT_ID = "685e9d7e000715a6e67f"
+API_KEY = "standard_326fc4ccf37f4e2cfe08f3b2de0de604851ea6ce841695c95970c091ff49be07214b7887967400207417716f59ca8ad0e2363b73e295f52f95afef66636bf9f64b3f1f70ee399130808716ace33fab37f93f007b1c1273adc2dd05aa2701e4609c41fc28e1ef0e51aade4cbc8ce7d780d42b978bb6cd60f00fa4c127737d7f28"
 
 # Appwrite Setup
 client = Client()
@@ -101,14 +103,17 @@ def fetch_all_documents(db_id, col_id, resume=False, checkpoint_dir="checkpoints
     return all_docs, logs, completed
 
 
-def pull_full_project_state():
+def pull_full_project_state(resume=False, checkpoint_dir="checkpoints"):
     project = {
         "databases": {},
         "functions": [],
         "storage": {
             "buckets": {}
-        }
+        },
+        "completed": False
     }
+    completed_resources = []
+    logs = []  # logs are now only in memory, not in project dict
 
     # Databases
     try:
@@ -116,8 +121,8 @@ def pull_full_project_state():
         for db in dbs:
             db_id = db["$id"]
             db_data = {"name": db["name"], "collections": {}}
+            logs.append(f"Database {db['name']} started")
             collections = databases.list_collections(database_id=db_id)["collections"]
-
             for col in collections:
                 col_id = col["$id"]
                 col_data = {
@@ -125,32 +130,38 @@ def pull_full_project_state():
                     "attributes": [],
                     "documents": []
                 }
-
                 try:
                     attr = databases.list_attributes(database_id=db_id, collection_id=col_id)
                     col_data["attributes"] = attr.get("attributes", [])
                 except Exception as e:
-                    print(f"⚠️ Couldn't fetch attributes for {col_id}: {e}")
-
+                    logs.append(f"⚠️ Couldn't fetch attributes for {col_id}: {e}")
                 try:
-                    col_data["documents"] = fetch_all_documents(db_id, col_id)
+                    docs, doc_logs, completed = fetch_all_documents(db_id, col_id, resume=resume, checkpoint_dir=checkpoint_dir)
+                    col_data["documents"] = docs
+                    logs.extend(doc_logs)
+                    if completed:
+                        completed_resources.append(f"{db['name']}::{col['name']}")
                 except Exception as e:
-                    print(f"⚠️ Couldn't fetch documents for {col_id}: {e}")
-
+                    logs.append(f"⚠️ Couldn't fetch documents for {col_id}: {e}")
                 db_data["collections"][col_id] = col_data
-
+                logs.append(f"Collection {col['name']} ended")
             project["databases"][db_id] = db_data
+            logs.append(f"Database {db['name']} ended")
     except Exception as e:
-        print(f"❌ Error fetching databases: {e}")
+        logs.append(f"❌ Error fetching databases: {e}")
 
     # Functions
+    logs.append("Functions started")
     try:
         funcs = functions.list()["functions"]
         project["functions"] = [{"$id": f["$id"], "name": f["name"], "runtime": f["runtime"]} for f in funcs]
+        logs.append("Functions ended")
+        completed_resources.append("functions")
     except Exception as e:
-        print(f"⚠️ Couldn't fetch functions: {e}")
+        logs.append(f"⚠️ Couldn't fetch functions: {e}")
 
     # Storage Buckets
+    logs.append("Storage started")
     try:
         buckets = storage.list_buckets()["buckets"]
         for bucket in buckets:
@@ -164,14 +175,18 @@ def pull_full_project_state():
                 bucket_data["files"] = [
                     {"$id": f["$id"], "name": f["name"], "sizeOriginal": f["sizeOriginal"]} for f in files
                 ]
+                completed_resources.append(f"bucket::{bucket['name']}")
             except Exception as fe:
-                print(f"⚠️ Couldn't fetch files in bucket {bucket_id}: {fe}")
-
+                logs.append(f"⚠️ Couldn't fetch files in bucket {bucket_id}: {fe}")
             project["storage"]["buckets"][bucket_id] = bucket_data
+        logs.append("Storage ended")
     except Exception as e:
-        print(f"⚠️ Couldn't fetch storage buckets: {e}")
+        logs.append(f"⚠️ Couldn't fetch storage buckets: {e}")
 
-    return project
+    # Mark completion
+    project["completed"] = True
+    project["completed_resources"] = completed_resources
+    return project, logs
 
 
 def compare_project_states(source, destination):
@@ -196,12 +211,37 @@ if __name__ == "__main__":
     parser.add_argument("--compare", action="store_true", help="Compare two pulled project states")
     parser.add_argument("--source", type=str, help="Path to source JSON")
     parser.add_argument("--destination", type=str, help="Path to destination JSON")
+    parser.add_argument("--resume", action="store_true", help="Resume from last checkpoint if available")
+    parser.add_argument("--checkpoint_dir", type=str, default="checkpoints", help="Directory to store checkpoints")
     args = parser.parse_args()
 
     if args.pull:
-        state = pull_full_project_state()
-        save_to_file(state, args.output)
-        print(f"📄 Full project state saved to `{args.output}`")
+        try:
+            state, logs = pull_full_project_state(resume=args.resume, checkpoint_dir=args.checkpoint_dir)
+            save_to_file(state, args.output)
+            print(f"📄 Full project state saved to `{args.output}`")
+            print("\n--- LOGS ---")
+            for log in logs:
+                print(log)
+            print("\n--- COMPLETED RESOURCES ---")
+            for res in state.get("completed_resources", []):
+                print(res)
+            if not state.get("completed", False):
+                print("\n⚠️ Migration not fully completed. Resume with --resume.")
+        except Exception as e:
+            # Save partial state with completed: False
+            partial_state = locals().get('state', {"completed": False})
+            partial_state["completed"] = False
+            save_to_file(partial_state, args.output)
+            print(f"❌ Error during pull: {e}")
+            print("\n--- LOGS ---")
+            logs = locals().get('logs', [])
+            for log in logs:
+                print(log)
+            print("\n--- COMPLETED RESOURCES ---")
+            for res in partial_state.get("completed_resources", []):
+                print(res)
+            print("\n⚠️ Migration not fully completed. Resume with --resume.")
 
     if args.compare and args.source and args.destination:
         src = load_from_file(args.source)
@@ -209,3 +249,4 @@ if __name__ == "__main__":
         diff = compare_project_states(src, dest)
         print("🧾 Migration Comparison Result:")
         print(diff)
+
