@@ -7,6 +7,9 @@ python migration_validator.py --compare --source prod_snapshot.json --destinatio
 
 # With resume and checkpointing logic to resume from in between
 python migration_validator.py --pull --output des_snapshot.json --resume
+
+# seedin appwrite from the json
+python migration_validator.py --seed prod_snapshot.json
 """
 import os
 import time
@@ -188,6 +191,203 @@ def pull_full_project_state(resume=False, checkpoint_dir="checkpoints"):
     project["completed_resources"] = completed_resources
     return project, logs
 
+def wait_for_collection_ready(db_id, col_id, timeout=10):
+    """Wait until all attributes in the collection are indexed."""
+    start = time.time()
+    while time.time() - start < timeout:
+        try:
+            collection = databases.get_collection(database_id=db_id, collection_id=col_id)
+            if collection["status"] == "available":
+                return True
+        except Exception:
+            pass
+        time.sleep(0.5)
+    print(f"⚠️ Timeout while waiting for collection {col_id} to become available")
+    return False
+
+
+def seed_from_snapshot(snapshot_path):
+    with open(snapshot_path, "r") as f:
+        snapshot = json.load(f)
+
+    created_resources = []
+
+    # Step 1: Databases and collections
+    for db_id, db_data in snapshot.get("databases", {}).items():
+        try:
+            databases.create(database_id=db_id, name=db_data["name"])
+            created_resources.append(f"Database: {db_data['name']} ({db_id})")
+        except Exception as e:
+            print(f"⚠️ Failed to create database {db_id}: {e}")
+
+        for col_id, col_data in db_data.get("collections", {}).items():
+            try:
+                databases.create_collection(
+                    database_id=db_id,
+                    collection_id=col_id,
+                    name=col_data["name"]
+                )
+                created_resources.append(f"Collection: {col_data['name']} ({col_id})")
+            except Exception as e:
+                print(f"⚠️ Failed to create collection {col_id}: {e}")
+
+    # Step 2: Attributes
+    for db_id, db_data in snapshot.get("databases", {}).items():
+        for col_id, col_data in db_data.get("collections", {}).items():
+            for attr in col_data.get("attributes", []):
+                attr_type = attr["type"]
+                attr_id = attr["key"]
+                attr_required = attr.get("required", False)
+                attr_default = attr.get("default")
+                try:
+                    if attr_type == "string":
+                        databases.create_string_attribute(
+                            database_id=db_id,
+                            collection_id=col_id,
+                            key=attr_id,
+                            size=attr.get("size", 255),
+                            required=attr_required,
+                            default=attr_default,
+                            array=attr.get("array", False)
+                        )
+                    elif attr_type == "integer":
+                        databases.create_integer_attribute(
+                            database_id=db_id,
+                            collection_id=col_id,
+                            key=attr_id,
+                            required=attr_required,
+                            default=attr_default,
+                            min=attr.get("min"),
+                            max=attr.get("max"),
+                            array=attr.get("array", False)
+                        )
+                    elif attr_type == "float":
+                        databases.create_float_attribute(
+                            database_id=db_id,
+                            collection_id=col_id,
+                            key=attr_id,
+                            required=attr_required,
+                            default=attr_default,
+                            min=attr.get("min"),
+                            max=attr.get("max"),
+                            array=attr.get("array", False)
+                        )
+                    elif attr_type == "boolean":
+                        databases.create_boolean_attribute(
+                            database_id=db_id,
+                            collection_id=col_id,
+                            key=attr_id,
+                            required=attr_required,
+                            default=attr_default,
+                            array=attr.get("array", False)
+                        )
+                    elif attr_type == "email":
+                        databases.create_email_attribute(
+                            database_id=db_id,
+                            collection_id=col_id,
+                            key=attr_id,
+                            required=attr_required,
+                            default=attr_default,
+                            array=attr.get("array", False)
+                        )
+                    elif attr_type == "url":
+                        databases.create_url_attribute(
+                            database_id=db_id,
+                            collection_id=col_id,
+                            key=attr_id,
+                            required=attr_required,
+                            default=attr_default,
+                            array=attr.get("array", False)
+                        )
+                    elif attr_type == "ip":
+                        databases.create_ip_attribute(
+                            database_id=db_id,
+                            collection_id=col_id,
+                            key=attr_id,
+                            required=attr_required,
+                            default=attr_default,
+                            array=attr.get("array", False)
+                        )
+                    elif attr_type == "enum":
+                        databases.create_enum_attribute(
+                            database_id=db_id,
+                            collection_id=col_id,
+                            key=attr_id,
+                            elements=attr.get("elements", []),
+                            required=attr_required,
+                            default=attr_default,
+                            array=attr.get("array", False)
+                        )
+                    elif attr_type == "datetime":
+                        databases.create_datetime_attribute(
+                            database_id=db_id,
+                            collection_id=col_id,
+                            key=attr_id,
+                            required=attr_required,
+                            default=attr_default,
+                            array=attr.get("array", False)
+                        )
+                    elif attr_type == "relationship":
+                        databases.create_relationship_attribute(
+                            database_id=db_id,
+                            collection_id=col_id,
+                            related_collection_id=attr["relatedCollection"],
+                            type=attr["relationType"],
+                            key=attr_id,
+                            two_way=attr.get("twoWay", False),
+                            two_way_key=attr.get("twoWayKey"),
+                            on_delete=attr.get("onDelete", "restrict")
+                        )
+                    else:
+                        print(f"⚠️ Unknown attribute type {attr_type} for key {attr_id}")
+                    created_resources.append(f"  └─ Attribute: {attr_id} ({attr_type})")
+                except Exception as e:
+                    print(f"⚠️ Failed to create attribute {attr_id} in {col_id}: {e}")
+
+    # Step 3: Wait for all collections to become ready
+    for db_id, db_data in snapshot.get("databases", {}).items():
+        for col_id in db_data.get("collections", {}):
+            wait_for_collection_ready(db_id, col_id)
+
+    # Step 4: Documents
+    for db_id, db_data in snapshot.get("databases", {}).items():
+        for col_id, col_data in db_data.get("collections", {}).items():
+            for doc in col_data.get("documents", []):
+                try:
+                    doc_id = doc.get("$id")
+                    databases.create_document(
+                        database_id=db_id,
+                        collection_id=col_id,
+                        document_id=doc_id,
+                        data={k: v for k, v in doc.items() if k != "$id"}
+                    )
+                    created_resources.append(f"  └─ Document: {doc_id}")
+                except Exception as e:
+                    print(f"⚠️ Failed to create document {doc_id}: {e}")
+
+    # Step 5: Functions
+    if SEED_FUNCTIONS:
+        for fn in snapshot.get("functions", []):
+            try:
+                functions.create(
+                    function_id=fn["$id"],
+                    name=fn["name"],
+                    runtime=fn["runtime"]
+                )
+                created_resources.append(f"Function: {fn['name']}")
+            except Exception as e:
+                print(f"⚠️ Failed to create function {fn['name']}: {e}")
+
+    # Step 6: Buckets (Files not handled)
+    if SEED_STORAGE:
+        for bucket_id, bucket in snapshot.get("storage", {}).get("buckets", {}).items():
+            try:
+                storage.create_bucket(bucket_id=bucket_id, name=bucket["name"])
+                created_resources.append(f"Bucket: {bucket['name']}")
+            except Exception as e:
+                print(f"⚠️ Failed to create bucket {bucket['name']}: {e}")
+
+    return created_resources
 
 def compare_project_states(source, destination):
     diff = DeepDiff(source, destination, ignore_order=True)
@@ -213,6 +413,8 @@ if __name__ == "__main__":
     parser.add_argument("--destination", type=str, help="Path to destination JSON")
     parser.add_argument("--resume", action="store_true", help="Resume from last checkpoint if available")
     parser.add_argument("--checkpoint_dir", type=str, default="checkpoints", help="Directory to store checkpoints")
+    parser.add_argument("--seed", type=str, help="Seed local Appwrite project using snapshot JSON")
+
     args = parser.parse_args()
 
     if args.pull:
@@ -250,3 +452,10 @@ if __name__ == "__main__":
         print("🧾 Migration Comparison Result:")
         print(diff)
 
+
+    if args.seed:
+        print(f"🌱 Seeding from snapshot: {args.seed}")
+        created = seed_from_snapshot(args.seed)
+        print("✅ Seeding complete. Resources created:")
+        for item in created:
+            print(item)
