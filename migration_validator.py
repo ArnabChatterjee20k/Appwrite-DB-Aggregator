@@ -17,6 +17,7 @@ from appwrite.services.functions import Functions
 from appwrite.services.storage import Storage
 from deepdiff import DeepDiff
 from appwrite.query import Query
+import pickle
 
 # Load .env
 load_dotenv()
@@ -32,21 +33,41 @@ databases = Databases(client)
 functions = Functions(client)
 storage = Storage(client)
 
-def fetch_all_documents(db_id, col_id):
+def fetch_all_documents(db_id, col_id, resume=False, checkpoint_dir="checkpoints", logs=None):
+    if logs is None:
+        logs = []
     all_docs = []
     limit = 100
     offset = 0
     allowed_keys = {"$id", "$sequence"}
+    checkpoint_file = os.path.join(checkpoint_dir, f"checkpoint_{db_id}_{col_id}.pkl")
+    completed = False
+
+    # Resume logic
+    if resume and os.path.exists(checkpoint_file):
+        with open(checkpoint_file, "rb") as f:
+            checkpoint = pickle.load(f)
+            all_docs = checkpoint.get("all_docs", [])
+            offset = checkpoint.get("offset", 0)
+            logs = checkpoint.get("logs", logs)
+            completed = checkpoint.get("completed", False)
+        logs.append(f"[RESUME] Resuming {db_id}/{col_id} from offset {offset}")
+    else:
+        logs.append(f"{db_id}/{col_id} started")
+
+    os.makedirs(checkpoint_dir, exist_ok=True)
 
     while True:
         try:
             result = databases.list_documents(
                 database_id=db_id,
                 collection_id=col_id,
-                queries=[Query.limit(limit), Query.offset(offset),Query.order_desc("")]
+                queries=[Query.limit(limit), Query.offset(offset), Query.order_desc("")]
             )
             docs = result.get("documents", [])
             if not docs:
+                completed = True
+                logs.append(f"{db_id}/{col_id} ended")
                 break
 
             # Append only schema fields (excluding Appwrite system keys like $id)
@@ -55,11 +76,29 @@ def fetch_all_documents(db_id, col_id):
                 for doc in docs
             ])
             offset += limit
+            logs.append(f"{db_id}/{col_id}: {offset} docs done")
+
+            # Save checkpoint every 100 docs
+            with open(checkpoint_file, "wb") as f:
+                pickle.dump({
+                    "all_docs": all_docs,
+                    "offset": offset,
+                    "logs": logs,
+                    "completed": False
+                }, f)
         except Exception as e:
-            print(f"⚠️ Failed to fetch documents from {col_id}: {e}")
+            logs.append(f"⚠️ Failed to fetch documents from {col_id}: {e}")
             break
 
-    return all_docs
+    # Final checkpoint with completion status
+    with open(checkpoint_file, "wb") as f:
+        pickle.dump({
+            "all_docs": all_docs,
+            "offset": offset,
+            "logs": logs,
+            "completed": completed
+        }, f)
+    return all_docs, logs, completed
 
 
 def pull_full_project_state():
