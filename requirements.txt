@@ -1,0 +1,12 @@
+appwrite==11.0.0
+certifi==2025.7.14
+charset-normalizer==3.4.2
+deepdiff==8.5.0
+faker==37.4.0
+idna==3.10
+more-itertools==10.7.0
+orderly-set==5.5.0
+python-dotenv==1.1.1
+requests==2.32.4
+tzdata==2025.2
+urllib3==2.5.0
