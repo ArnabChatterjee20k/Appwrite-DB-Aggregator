@@ -26,9 +26,11 @@ import pickle
 
 # Load .env
 load_dotenv()
-ENDPOINT = "https://fra.cloud.appwrite.io/v1"
-PROJECT_ID = "685e9d7e000715a6e67f"
-API_KEY = "standard_326fc4ccf37f4e2cfe08f3b2de0de604851ea6ce841695c95970c091ff49be07214b7887967400207417716f59ca8ad0e2363b73e295f52f95afef66636bf9f64b3f1f70ee399130808716ace33fab37f93f007b1c1273adc2dd05aa2701e4609c41fc28e1ef0e51aade4cbc8ce7d780d42b978bb6cd60f00fa4c127737d7f28"
+ENDPOINT = os.environ.get("APPWRITE_ENDPOINT")
+PROJECT_ID = os.environ.get("APPWRITE_PROJECT_ID")
+API_KEY = os.environ.get("APPWRITE_API_KEY")
+SEED_FUNCTIONS = False
+SEED_STORAGE = False
 
 # Appwrite Setup
 client = Client()
