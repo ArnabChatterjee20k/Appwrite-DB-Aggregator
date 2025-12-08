@@ -24,6 +24,15 @@
 ### Upload from file later and compare
 `python db_faker.py --compare --collections posts --output posts.json`
 
+### Monitor realtime
+First init schema
+`python db_faker.py --init-schema`
+
+Then serve the index.html
+
+Then run realtime command
+`python db_faker.py --realtime=true`
+
 ### Appwrite database schema generator
 * Mainly focused on generating the string based data for databases
 * Make sure to change the project settings on appwrite.json

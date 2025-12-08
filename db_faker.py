@@ -210,6 +210,13 @@ def compare(local, remote):
     diff = DeepDiff(local, remote, ignore_order=True)
     return diff if diff else "✅ Local and remote data match!"
 
+def publish_event():
+    import time, random
+    while True:
+        upload_documents(generate_documents(1))
+        print("triggerd")
+        time.sleep(random.choice([2,4,6]) + random.random())
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--init-schema", action="store_true", help="Create DB and collections/schema")
@@ -221,6 +228,8 @@ if __name__ == "__main__":
     parser.add_argument("--attempts", type=int, default=10, help="Max retry attempts for upload")
     parser.add_argument("--dry-run", action="store_true", help="Skip upload, only generate and save")
     parser.add_argument("--seed", type=int, help="Seed for repeatable generation")
+    parser.add_argument("--delete", type=bool, help="delete db of project id")
+    parser.add_argument("--realtime", type=bool, help="create documents in the db at each interval. make sure to run index.html first to see")
     args = parser.parse_args()
 
     selected_collections = args.collections.split(",") if args.collections else None
