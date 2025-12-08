@@ -21,13 +21,15 @@ from dotenv import load_dotenv
 from appwrite.client import Client
 from appwrite.id import ID
 from appwrite.services.databases import Databases
+from appwrite.permission import Permission
+from appwrite.role import Role
 from deepdiff import DeepDiff
 
 # Load environment
 load_dotenv()
-ENDPOINT = os.getenv("APPWRITE_ENDPOINT")
-PROJECT_ID = os.getenv("APPWRITE_PROJECT_ID")
-API_KEY = os.getenv("APPWRITE_API_KEY")
+ENDPOINT = "https://fra.cloud.appwrite.io/v1"
+PROJECT_ID = "693125a800378378faf0"
+API_KEY = "standard_06782f4f6529ce57af946db0b6e45926a0befed8ee23fe5aa1f80b20c2adc2fa252d5ed4b106584f8c9da63938065388348a0f1b638d382c0f1ca962c3c1b2fd9e3e5462fac9d1c728f5ad195c66345382d35bb6eb03eedb71df0ef03a5fad741c22757ad7fc92d5a362af6240c46d774b881e06434942c505df4bcd55cb5358"
 DATABASE_ID = os.getenv("APPWRITE_DATABASE_ID") or "auto-generated-db"
 
 # Appwrite setup
@@ -104,7 +106,12 @@ def init_collections():
                 database_id=DATABASE_ID,
                 collection_id=collection,
                 name=collection,
-                document_security=False
+                document_security=False,
+                permissions=[
+                    Permission.read(Role.any()),
+                    Permission.update(Role.any()),
+                    Permission.delete(Role.any())
+                ]
             )
             print(f"📦 Created collection `{collection}`")
 
@@ -187,6 +194,10 @@ def upload_documents(data, max_attempts=10):
                         time.sleep(wait)
         print(f"✅ Upload complete for `{collection}`")
 
+def delete_dbs():
+    for db in databases.list()['databases']:
+        databases.delete(db['$id'])
+
 def save_to_file(data, path):
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
@@ -249,3 +260,9 @@ if __name__ == "__main__":
         local = load_from_file(args.output)
         remote = pull_from_appwrite(selected_collections)
         print(compare(local, remote))
+
+    if args.realtime:
+        publish_event()
+
+    if args.delete:
+        delete_dbs()
