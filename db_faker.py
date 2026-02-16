@@ -10,12 +10,21 @@ python bulk_appwrite_tool.py --generate --count 500 --collections posts --dry-ru
 
 # Upload from file later and compare
 python bulk_appwrite_tool.py --compare --collections posts --output posts.json
+
+# Initialize only the 'csv' collection (if not exists) with all required attributes
+python db_faker.py --init-csv-collection
+
+# Create 'csv' collection (if not exists) and generate CSV for import with target size (default 10MB)
+python db_faker.py --csv-with-a-size
+python db_faker.py --csv-with-a-size --csv-size 5 --csv-output my_import.csv
 """
 import os
+import re
 import time
 import json
 import random
 import argparse
+import csv
 from faker import Faker
 from dotenv import load_dotenv
 from appwrite.client import Client
@@ -43,7 +52,12 @@ COLLECTIONS = {
     "users": ["name", "email", "age", "username", "bio"],
     "products": ["name", "price", "in_stock", "brand", "category"],
     "posts": ["title", "content", "likes", "tags", "published"],
-    "events": ["title", "location", "date", "organizer", "attendees"]
+    "events": ["title", "location", "date", "organizer", "attendees"],
+    "csv": [
+        "id", "name", "email", "description",
+        "extra_1", "extra_2", "extra_3", "extra_4", "extra_5", "extra_6",
+        "extra_7", "extra_8",
+    ],
 }
 
 # Field type mapping for schema generation
@@ -65,7 +79,10 @@ FIELD_TYPE_MAP = {
     "location": "string",
     "date": "string",
     "organizer": "string",
-    "attendees": "integer"
+    "attendees": "integer",
+    "id": "string",
+    "description": "string",
+    **{f"extra_{i}": "string" for i in range(1, 9)},
 }
 
 # Field value generators
@@ -88,6 +105,9 @@ GENERATOR_MAP = {
     "date": faker.date,
     "organizer": faker.company,
     "attendees": lambda: random.randint(0, 1000),
+    "id": lambda: "",  # filled by row index in CSV generator
+    "description": lambda: "This is a long description field to increase file size. " + faker.text(max_nb_chars=200),
+    **{f"extra_{i}": faker.sentence for i in range(1, 9)},
 }
 
 CHUNK_SIZE = 100
@@ -98,6 +118,80 @@ def init_database():
         print(f"📁 Created database `{DATABASE_ID}`")
     except Exception as e:
         print(f"ℹ️ Database may already exist: {e}")
+
+def ensure_csv_collection():
+    """Create database and 'csv' collection with many string attributes if they don't exist."""
+    try:
+        databases.create(database_id=DATABASE_ID, name="Auto Generated DB")
+        print(f"📁 Created database `{DATABASE_ID}`")
+    except Exception as e:
+        print(f"ℹ️ Database may already exist: {e}")
+
+    collection_id = "csv"
+    fields = COLLECTIONS[collection_id]
+    try:
+        databases.create_collection(
+            database_id=DATABASE_ID,
+            collection_id=collection_id,
+            name=collection_id,
+            document_security=False,
+            permissions=[
+                Permission.read(Role.any()),
+                Permission.update(Role.any()),
+                Permission.delete(Role.any()),
+            ],
+        )
+        print(f"📦 Created collection `{collection_id}`")
+    except Exception as e:
+        print(f"ℹ️ Collection `{collection_id}` may already exist: {e}")
+
+    for field in fields:
+        try:
+            # All csv collection fields are string-like; use large size for description
+            size = 4096 if field == "description" else 1024
+            databases.create_string_attribute(
+                database_id=DATABASE_ID,
+                collection_id=collection_id,
+                key=field,
+                size=size,
+                required=False,
+            )
+        except Exception as e:
+            print(f"ℹ️ Attribute `{field}` may already exist: {e}")
+    print(f"✅ Schema ready for collection `{collection_id}`")
+
+
+def generate_csv_with_size(target_size_bytes, output_path="large_file.csv", seed=None):
+    """Generate a CSV file with columns matching the 'csv' collection until file reaches target size."""
+    if seed is not None:
+        random.seed(seed)
+        Faker.seed(seed)
+
+    fields = COLLECTIONS["csv"]
+    # Add _import prefix before file extension
+    if output_path.endswith('.csv'):
+        filename = output_path[:-4] + '_import.csv'
+    else:
+        filename = output_path + '_import.csv'
+    with open(filename, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(fields)
+        i = 0
+        while os.path.getsize(filename) < target_size_bytes:
+            row = [
+                str(i),
+                faker.name(),
+                faker.email(),
+                "This is a long description field to increase file size. " + faker.text(max_nb_chars=200),
+            ]
+            row += [faker.sentence() for _ in range(8)]
+            writer.writerow(row)
+            i += 1
+
+    size_mb = os.path.getsize(filename) / (1024 * 1024)
+    print("CSV generated:", round(size_mb, 2), "MB", f"({i} rows)")
+    return filename
+
 
 def init_collections():
     for collection, fields in COLLECTIONS.items():
@@ -241,6 +335,11 @@ if __name__ == "__main__":
     parser.add_argument("--seed", type=int, help="Seed for repeatable generation")
     parser.add_argument("--delete", type=bool, help="delete db of project id")
     parser.add_argument("--realtime", type=bool, help="create documents in the db at each interval. make sure to run index.html first to see")
+    parser.add_argument("--init-csv-collection", action="store_true", help="Create 'csv' collection (if not exists) with all required string attributes")
+    parser.add_argument("--csv-with-a-size", action="store_true", help="Create 'csv' collection (if not exists) and generate a CSV file for import with target size")
+    parser.add_argument("--csv-size", type=float, default=10, help="Target CSV size in MB (default: 10)")
+    parser.add_argument("--csv-output", type=str, default="large_file.csv", help="Output path for generated CSV (will be suffixed with _import before .csv extension, default: large_file_import.csv)")
+    parser.add_argument("--csv-seed", type=int, help="Optional seed for repeatable CSV generation")
     args = parser.parse_args()
 
     selected_collections = args.collections.split(",") if args.collections else None
@@ -266,3 +365,15 @@ if __name__ == "__main__":
 
     if args.delete:
         delete_dbs()
+
+    if args.init_csv_collection:
+        ensure_csv_collection()
+
+    if args.csv_with_a_size:
+        ensure_csv_collection()
+        target_bytes = int(args.csv_size * 1024 * 1024)
+        generate_csv_with_size(
+            target_size_bytes=target_bytes,
+            output_path=args.csv_output,
+            seed=args.csv_seed,
+        )

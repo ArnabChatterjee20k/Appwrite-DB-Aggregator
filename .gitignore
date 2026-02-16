@@ -2,3 +2,4 @@
 .env
 *.json
 *.pkl
+*_import.csv
